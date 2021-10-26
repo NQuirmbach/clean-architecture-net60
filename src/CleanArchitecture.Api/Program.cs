@@ -1,9 +1,20 @@
 using CleanArchitecture.Api.Infrastructure.Extensions;
+using CleanArchitecture.Api.Infrastructure.Middleware;
 using CleanArchitecture.Api.Routes;
 using CleanArchitecture.Application;
 using CleanArchitecture.Infrastructure;
 
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
+
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .WriteTo.Console(theme: AnsiConsoleTheme.Code)
+    .CreateLogger();
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog();
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -11,8 +22,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
+
+app.UseErrorHandling();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -24,22 +38,10 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapRouteHandler<TodoListRoutes>();
+app.MapRouteHandler<TodoItemRoutes>();
 
+app.UseHealthChecks("/health");
 
-//app.MapConnectionHandler<object>("/user");
-
-//app.MapGet("/weatherforecast", () =>
-//{
-//    var forecast = Enumerable.Range(1, 5).Select(index =>
-//       new WeatherForecast
-//       (
-//           DateTime.Now.AddDays(index),
-//           Random.Shared.Next(-20, 55),
-//           summaries[Random.Shared.Next(summaries.Length)]
-//       ))
-//        .ToArray();
-//    return forecast;
-//})
-//.WithName("GetWeatherForecast");
+builder.MigrateDatabase();
 
 app.Run();

@@ -14,8 +14,6 @@ public class CreateTodoItemValidator : AbstractValidator<CreateTodoItemCommand>
                 m.RuleFor(m => m.Text)
                     .NotEmpty()
                     .MaximumLength(100);
-                m.RuleFor(m => m.ListId)
-                    .NotEmpty();
             });
     }
 }

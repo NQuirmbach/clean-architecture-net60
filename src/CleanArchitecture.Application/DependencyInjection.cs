@@ -1,6 +1,9 @@
 ﻿using System.Reflection;
 
 using CleanArchitecture.Application.Common.Behaviours;
+using CleanArchitecture.Application.TodoItems.Validators;
+
+using FluentValidation;
 
 using MediatR;
 
@@ -15,5 +18,7 @@ public static class DependencyInjection
         services.AddMediatR(Assembly.GetExecutingAssembly());
 
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestValidationBehavior<,>));
+
+        services.AddValidatorsFromAssemblyContaining<TodoItemValidator>();
     }
 }

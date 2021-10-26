@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using CleanArchitecture.Domain.Entities;
 using CleanArchitecture.Domain.Enums;
 using CleanArchitecture.Domain.Models;
+using Mapster.Utils;
 
 namespace CleanArchitecture.Domain.Models
 {
@@ -14,10 +15,8 @@ namespace CleanArchitecture.Domain.Models
             {
                 Text = p1.Text,
                 Description = p1.Description,
-                Status = p1.Status,
+                Status = Enum<ItemStatus>.ToString(p1.Status),
                 DueDate = p1.DueDate,
-                ListId = p1.ListId,
-                List = null,
                 Id = p1.Id,
                 CreationDate = p1.CreationDate
             };
@@ -32,10 +31,8 @@ namespace CleanArchitecture.Domain.Models
             
             result.Text = p2.Text;
             result.Description = p2.Description;
-            result.Status = p2.Status;
+            result.Status = Enum<ItemStatus>.ToString(p2.Status);
             result.DueDate = p2.DueDate;
-            result.ListId = p2.ListId;
-            result.List = null;
             result.Id = p2.Id;
             result.CreationDate = p2.CreationDate;
             return result;
@@ -45,10 +42,8 @@ namespace CleanArchitecture.Domain.Models
         {
             Text = p4.Text,
             Description = p4.Description,
-            Status = p4.Status,
+            Status = Enum<ItemStatus>.ToString(p4.Status),
             DueDate = p4.DueDate,
-            ListId = p4.ListId,
-            List = null,
             Id = p4.Id,
             CreationDate = p4.CreationDate
         };
@@ -58,9 +53,8 @@ namespace CleanArchitecture.Domain.Models
             {
                 Text = p5.Text,
                 Description = p5.Description,
-                Status = p5.Status,
-                DueDate = p5.DueDate,
-                ListId = p5.ListId
+                Status = p5.Status == null ? ItemStatus.Todo : Enum<ItemStatus>.Parse(p5.Status),
+                DueDate = p5.DueDate
             };
         }
         public static TodoItem AdaptTo(this TodoItemUpdate p6, TodoItem p7)
@@ -73,9 +67,8 @@ namespace CleanArchitecture.Domain.Models
             
             result.Text = p6.Text;
             result.Description = p6.Description;
-            result.Status = p6.Status;
+            result.Status = p6.Status == null ? ItemStatus.Todo : Enum<ItemStatus>.Parse(p6.Status);
             result.DueDate = p6.DueDate;
-            result.ListId = p6.ListId;
             return result;
             
         }
@@ -99,17 +92,12 @@ namespace CleanArchitecture.Domain.Models
             
             if (p8.Status != null)
             {
-                result.Status = (ItemStatus)p8.Status;
+                result.Status = Enum<ItemStatus>.Parse(p8.Status);
             }
             
             if (p8.DueDate != null)
             {
                 result.DueDate = p8.DueDate;
-            }
-            
-            if (p8.ListId != null)
-            {
-                result.ListId = (Guid)p8.ListId;
             }
             return result;
             

@@ -11,7 +11,7 @@ namespace CleanArchitecture.Application.TodoLists.Commands;
 
 public class CreateTodoListCommand : IRequest<TodoListDto>
 {
-    public CreateTodoListCommand(Guid createdBy, TodoListAdd model)
+    public CreateTodoListCommand(TodoListAdd model)
     {
         Model = model;
     }

@@ -11,20 +11,32 @@ public class TodoListRoutes : IEndpointMapper
 {
     public void Map(WebApplication app)
     {
-        app.MapGet("/todolist/{personId}", async (IMediator mediator, Guid personId) =>
+        app.MapGet("/todolist", async (IMediator mediator) =>
         {
-            var result = await mediator.Send(new GetPersonTodoListsQuery(personId));
+            var result = await mediator.Send(new GetTodoListsQuery());
 
             return Results.Ok(result);
         })
-        .WithName("GetTodoLists");
+        .WithName("GetTodoLists")
+        .Produces<IEnumerable<TodoListDto>>();
 
-        app.MapPost("/todolist/{personId}", async (IMediator mediator, Guid personId, TodoListAdd model) =>
+        app.MapPost("/todolist", async (IMediator mediator, TodoListAdd model) =>
         {
-            var result = await mediator.Send(new CreateTodoListCommand(personId, model));
+            var result = await mediator.Send(new CreateTodoListCommand(model));
 
             return Results.Ok(result);
-        });
+        })
+        .WithName("Post TodoList")
+        .Produces<TodoListDto>();
+
+
+        app.MapDelete("/todolist/{id}", async (IMediator mediator, Guid id) =>
+        {
+            await mediator.Send(new DeleteTodoListCommand(id));
+
+            return Results.Accepted();
+        })
+        .WithName("Delete TodoList");
     }
 }
 

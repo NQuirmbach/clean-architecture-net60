@@ -37,9 +37,11 @@ static class RegisterExtensions
     {
         return builder
             .ForAllTypesInNamespace(typeof(AppEntity).Assembly, "CleanArchitecture.Domain.Entities")
-            .ExcludeTypes(type => type.IsAbstract)
-            .MaxDepth(1)
-            .ShallowCopyForSameType(true);
+            .ExcludeTypes(type => type.IsEnum)
+            .AlterType(type => type.IsEnum || Nullable.GetUnderlyingType(type)?.IsEnum == true, typeof(string))
+            .MaxDepth(2)
+            .ShallowCopyForSameType(true)
+            .ForType<TodoItem>(cfg => cfg.Ignore(m => m.List).Ignore(m => m.ListId));
     }
 
     public static AdaptAttributeBuilder IgnoreNoModifyProperties(this AdaptAttributeBuilder builder)
@@ -48,6 +50,7 @@ static class RegisterExtensions
             .ForType<TodoItem>(cfg => cfg
                 .IgnoreEntity()
                 .Ignore(m => m.List)
+                .Ignore(m => m.ListId)
             )
             .ForType<TodoList>(cfg => cfg
                 .IgnoreEntity()

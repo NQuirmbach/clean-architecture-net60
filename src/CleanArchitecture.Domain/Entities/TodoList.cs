@@ -4,7 +4,7 @@ namespace CleanArchitecture.Domain.Entities;
 
 public class TodoList : AppEntity
 {
-    public string Name { get; set; }
+    public string Name { get; set; } = "";
     public ICollection<TodoItem> Items { get; set; } = new List<TodoItem>();
 
 

@@ -8,9 +8,6 @@ public class CreateTodoListValidator : AbstractValidator<CreateTodoListCommand>
 {
     public CreateTodoListValidator()
     {
-        RuleFor(m => m.CreatedBy)
-            .NotEmpty();
-
         RuleFor(m => m.Model)
             .NotNull()
             .ChildRules(m =>            

@@ -4,17 +4,20 @@ using CleanArchitecture.Domain.Entities;
 
 using MediatR;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace CleanArchitecture.Application.TodoItems.Commands;
 
 public class DeleteTodoItemCommand : IRequest
 {
-    public DeleteTodoItemCommand(Guid id)
+    public DeleteTodoItemCommand(Guid listId, Guid id)
     {
+        ListId = listId;
         Id = id;
     }
 
+    public Guid ListId { get; }
     public Guid Id { get; }
 
     public class DeleteTodoItemCommandHandler : IRequestHandler<DeleteTodoItemCommand>
@@ -30,7 +33,8 @@ public class DeleteTodoItemCommand : IRequest
 
         public async Task<Unit> Handle(DeleteTodoItemCommand request, CancellationToken cancellationToken)
         {
-            var entity = await _context.TodoItems.FindAsync(request.Id);
+            var entity = await _context.TodoItems
+                .SingleOrDefaultAsync(m => m.Id == request.Id && m.ListId == request.ListId, cancellationToken);
 
             if (entity == null) throw new EntityNotFoundException(nameof(TodoItem), request.Id);
 

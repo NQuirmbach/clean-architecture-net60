@@ -1,0 +1,16 @@
+image:
+  pullPolicy: Never
+
+ingress:
+  enabled: true
+  hosts:
+    - host: api.cleanarchitecture.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+
+# https://github.com/bitnami/charts/tree/master/bitnami/mysql/#installing-the-chart
+mysql:
+  auth:
+    username: ca_admin
+    password: supersecretpassw0rd

@@ -5,11 +5,12 @@ using CleanArchitecture.Domain.Entities;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace CleanArchitecture.Infrastructure.Perstience;
+namespace CleanArchitecture.Infrastructure.Persistence;
 
 public class AppDbContext : DbContext, IAppContext
 {
     private readonly IDateTimeProvider _dateTimeProvider;
+
 
     public AppDbContext(DbContextOptions<AppDbContext> options, IDateTimeProvider dateTimeProvider) : base(options)
     {

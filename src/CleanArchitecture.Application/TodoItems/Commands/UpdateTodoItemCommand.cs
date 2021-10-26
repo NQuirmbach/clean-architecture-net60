@@ -4,6 +4,8 @@ using CleanArchitecture.Domain.Entities;
 using CleanArchitecture.Domain.Exceptions;
 using CleanArchitecture.Domain.Models;
 
+using FluentValidation;
+
 using MediatR;
 
 using Microsoft.EntityFrameworkCore;
@@ -13,61 +15,46 @@ namespace CleanArchitecture.Application.TodoItems.Commands;
 
 public class UpdateTodoItemCommand : IRequest<TodoItemDto>
 {
-    public UpdateTodoItemCommand(Guid id, TodoItemUpdate model)
+    public UpdateTodoItemCommand(Guid id, Guid listId, TodoItemUpdate model)
     {
         Id = id;
+        ListId = listId;
         Model = model;
     }
 
     public Guid Id { get; }
+    public Guid ListId { get; }
     public TodoItemUpdate Model { get; }
 
 
     public class UpdateTodoItemCommandHandler : IRequestHandler<UpdateTodoItemCommand, TodoItemDto>
     {
         private readonly IAppContext _context;
+        private readonly IValidator<TodoItem> _validator;
         private readonly ILogger _logger;
 
         const int MAX_INPROGRESS_COUNT = 3;
 
-        public UpdateTodoItemCommandHandler(IAppContext context, ILogger<UpdateTodoItemCommand> logger)
+        public UpdateTodoItemCommandHandler(IAppContext context, IValidator<TodoItem> validator, ILogger<UpdateTodoItemCommand> logger)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _validator = validator ?? throw new ArgumentNullException(nameof(validator));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<TodoItemDto> Handle(UpdateTodoItemCommand request, CancellationToken cancellationToken)
         {
-            var entity = await _context.TodoItems.FindAsync(request.Id);
+            var entity = await _context.TodoItems
+                .SingleOrDefaultAsync(m => m.Id == request.Id && m.ListId == request.ListId, cancellationToken);
 
             if (entity == null) throw new EntityNotFoundException(nameof(TodoItem), request.Id);
 
-            await CheckStatusPolicy(entity, cancellationToken);
-
             request.Model.AdaptTo(entity);
+
+            await _validator.ValidateAndThrowAsync(entity, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
             return entity.AdaptToDto();
-        }
-
-        /// <summary>
-        /// Check for all items inside the current list. Only 3 items are allowed with status 'InProgress'
-        /// </summary>
-        /// <param name="item">Item</param>
-        private async Task CheckStatusPolicy(TodoItem item, CancellationToken cancellationToken)
-        {
-            if (item.Status != Domain.Enums.ItemStatus.InProgress)
-                return;
-
-            // check current item count in list that have status 'In progress'
-            var inProgressCount = await _context.TodoItems
-                .Where(m => m.ListId == item.ListId && m.Id != item.Id && m.Status == Domain.Enums.ItemStatus.InProgress)
-                .CountAsync(cancellationToken);
-
-            if (inProgressCount >= MAX_INPROGRESS_COUNT)
-            {
-                throw new MaxItemInProgressException(MAX_INPROGRESS_COUNT);
-            }
         }
     }
 }
