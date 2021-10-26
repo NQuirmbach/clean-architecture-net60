@@ -17,28 +17,28 @@ public class CreateTodoListCommand : IRequest<TodoListDto>
     }
 
     public TodoListAdd Model { get; }
+}
 
-    public class CreateTodoListCommandHandler : IRequestHandler<CreateTodoListCommand, TodoListDto>
+public class CreateTodoListCommandHandler : IRequestHandler<CreateTodoListCommand, TodoListDto>
+{
+    private readonly IAppContext _context;
+    private readonly ILogger _logger;
+
+    public CreateTodoListCommandHandler(IAppContext context, ILogger<CreateTodoListCommand> logger)
     {
-        private readonly IAppContext _context;
-        private readonly ILogger _logger;
+        _context = context;
+        _logger = logger;
+    }
 
-        public CreateTodoListCommandHandler(IAppContext context, ILogger<CreateTodoListCommand> logger)
-        {
-            _context = context;
-            _logger = logger;
-        }
+    public async Task<TodoListDto> Handle(CreateTodoListCommand request, CancellationToken cancellationToken)
+    {
+        var entity = new TodoList(request.Model.Name);
 
-        public async Task<TodoListDto> Handle(CreateTodoListCommand request, CancellationToken cancellationToken)
-        {
-            var entity = new TodoList(request.Model.Name);
+        await _context.TodoLists.AddAsync(entity);
+        await _context.SaveChangesAsync(cancellationToken);
 
-            await _context.TodoLists.AddAsync(entity);
-            await _context.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Todo list '{Name}' created", entity.Name);
 
-            _logger.LogInformation("Todo list '{Name}' created", entity.Name);
-
-            return entity.AdaptToDto();
-        }
+        return entity.AdaptToDto();
     }
 }

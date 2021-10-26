@@ -19,31 +19,31 @@ public class DeleteTodoItemCommand : IRequest
 
     public Guid ListId { get; }
     public Guid Id { get; }
+}
 
-    public class DeleteTodoItemCommandHandler : IRequestHandler<DeleteTodoItemCommand>
+public class DeleteTodoItemCommandHandler : IRequestHandler<DeleteTodoItemCommand>
+{
+    private readonly IAppContext _context;
+    private readonly ILogger _logger;
+
+    public DeleteTodoItemCommandHandler(IAppContext context, ILogger<DeleteTodoItemCommand> logger)
     {
-        private readonly IAppContext _context;
-        private readonly ILogger _logger;
+        _context = context;
+        _logger = logger;
+    }
 
-        public DeleteTodoItemCommandHandler(IAppContext context, ILogger<DeleteTodoItemCommand> logger)
-        {
-            _context = context;
-            _logger = logger;
-        }
+    public async Task<Unit> Handle(DeleteTodoItemCommand request, CancellationToken cancellationToken)
+    {
+        var entity = await _context.TodoItems
+            .SingleOrDefaultAsync(m => m.Id == request.Id && m.ListId == request.ListId, cancellationToken);
 
-        public async Task<Unit> Handle(DeleteTodoItemCommand request, CancellationToken cancellationToken)
-        {
-            var entity = await _context.TodoItems
-                .SingleOrDefaultAsync(m => m.Id == request.Id && m.ListId == request.ListId, cancellationToken);
+        if (entity == null) throw new EntityNotFoundException(nameof(TodoItem), request.Id);
 
-            if (entity == null) throw new EntityNotFoundException(nameof(TodoItem), request.Id);
+        _context.TodoItems.Remove(entity);
+        await _context.SaveChangesAsync(cancellationToken);
 
-            _context.TodoItems.Remove(entity);
-            await _context.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Item '{ItemId}' has been delete from list '{ListId}'", request.Id, entity.ListId);
 
-            _logger.LogInformation("Item '{ItemId}' has been delete from list '{ListId}'", request.Id, entity.ListId);
-
-            return Unit.Value;
-        }
+        return Unit.Value;
     }
 }

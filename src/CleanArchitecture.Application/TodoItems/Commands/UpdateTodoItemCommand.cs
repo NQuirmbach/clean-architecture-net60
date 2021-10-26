@@ -25,36 +25,35 @@ public class UpdateTodoItemCommand : IRequest<TodoItemDto>
     public Guid Id { get; }
     public Guid ListId { get; }
     public TodoItemUpdate Model { get; }
+}
 
+public class UpdateTodoItemCommandHandler : IRequestHandler<UpdateTodoItemCommand, TodoItemDto>
+{
+    private readonly IAppContext _context;
+    private readonly IValidator<TodoItem> _validator;
+    private readonly ILogger _logger;
 
-    public class UpdateTodoItemCommandHandler : IRequestHandler<UpdateTodoItemCommand, TodoItemDto>
+    const int MAX_INPROGRESS_COUNT = 3;
+
+    public UpdateTodoItemCommandHandler(IAppContext context, IValidator<TodoItem> validator, ILogger<UpdateTodoItemCommand> logger)
     {
-        private readonly IAppContext _context;
-        private readonly IValidator<TodoItem> _validator;
-        private readonly ILogger _logger;
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
-        const int MAX_INPROGRESS_COUNT = 3;
+    public async Task<TodoItemDto> Handle(UpdateTodoItemCommand request, CancellationToken cancellationToken)
+    {
+        var entity = await _context.TodoItems
+            .SingleOrDefaultAsync(m => m.Id == request.Id && m.ListId == request.ListId, cancellationToken);
 
-        public UpdateTodoItemCommandHandler(IAppContext context, IValidator<TodoItem> validator, ILogger<UpdateTodoItemCommand> logger)
-        {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-            _validator = validator ?? throw new ArgumentNullException(nameof(validator));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
+        if (entity == null) throw new EntityNotFoundException(nameof(TodoItem), request.Id);
 
-        public async Task<TodoItemDto> Handle(UpdateTodoItemCommand request, CancellationToken cancellationToken)
-        {
-            var entity = await _context.TodoItems
-                .SingleOrDefaultAsync(m => m.Id == request.Id && m.ListId == request.ListId, cancellationToken);
+        request.Model.AdaptTo(entity);
 
-            if (entity == null) throw new EntityNotFoundException(nameof(TodoItem), request.Id);
+        await _validator.ValidateAndThrowAsync(entity, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
 
-            request.Model.AdaptTo(entity);
-
-            await _validator.ValidateAndThrowAsync(entity, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
-
-            return entity.AdaptToDto();
-        }
+        return entity.AdaptToDto();
     }
 }

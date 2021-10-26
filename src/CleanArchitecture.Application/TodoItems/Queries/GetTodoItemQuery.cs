@@ -23,26 +23,25 @@ public class GetTodoItemQuery : IRequest<TodoItemDto>
 
     public Guid ListId { get; }
     public Guid Id { get; }
-
-
-    public class GetTodoItemQueryHandler : IRequestHandler<GetTodoItemQuery, TodoItemDto>
-    {
-        private readonly IAppContext _context;
-
-        public GetTodoItemQueryHandler(IAppContext context)
-        {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-        }
-
-        public async Task<TodoItemDto> Handle(GetTodoItemQuery request, CancellationToken cancellationToken)
-        {
-            var entity = await _context.TodoItems
-                .SingleOrDefaultAsync(m => m.Id == request.Id && m.ListId == request.ListId, cancellationToken);
-
-            if (entity == null) throw new EntityNotFoundException(nameof(TodoItem), request.Id);
-
-            return entity.AdaptToDto();
-        }
-    }
 }
 
+
+public class GetTodoItemQueryHandler : IRequestHandler<GetTodoItemQuery, TodoItemDto>
+{
+    private readonly IAppContext _context;
+
+    public GetTodoItemQueryHandler(IAppContext context)
+    {
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+    }
+
+    public async Task<TodoItemDto> Handle(GetTodoItemQuery request, CancellationToken cancellationToken)
+    {
+        var entity = await _context.TodoItems
+            .SingleOrDefaultAsync(m => m.Id == request.Id && m.ListId == request.ListId, cancellationToken);
+
+        if (entity == null) throw new EntityNotFoundException(nameof(TodoItem), request.Id);
+
+        return entity.AdaptToDto();
+    }
+}

@@ -16,28 +16,27 @@ public class DeleteTodoListCommand : IRequest
     }
 
     public Guid Id { get; }
+}
+public class DeleteTodoListCommandHandler : IRequestHandler<DeleteTodoListCommand>
+{
+    private readonly IAppContext _context;
+    private readonly ILogger _logger;
 
-    public class DeleteTodoListCommandHandler : IRequestHandler<DeleteTodoListCommand>
+    public DeleteTodoListCommandHandler(IAppContext context, ILogger<DeleteTodoListCommand> logger)
     {
-        private readonly IAppContext _context;
-        private readonly ILogger _logger;
+        _context = context;
+        _logger = logger;
+    }
 
-        public DeleteTodoListCommandHandler(IAppContext context, ILogger<DeleteTodoListCommand> logger)
-        {
-            _context = context;
-            _logger = logger;
-        }
+    public async Task<Unit> Handle(DeleteTodoListCommand request, CancellationToken cancellationToken)
+    {
+        var entity = await _context.TodoLists.FindAsync(request.Id);
 
-        public async Task<Unit> Handle(DeleteTodoListCommand request, CancellationToken cancellationToken)
-        {
-            var entity = await _context.TodoLists.FindAsync(request.Id);
+        if (entity == null) throw new EntityNotFoundException(nameof(TodoList), request.Id);
 
-            if (entity == null) throw new EntityNotFoundException(nameof(TodoList), request.Id);
+        _context.TodoLists.Remove(entity);
+        await _context.SaveChangesAsync(cancellationToken);
 
-            _context.TodoLists.Remove(entity);
-            await _context.SaveChangesAsync(cancellationToken);
-
-            return Unit.Value;
-        }
+        return Unit.Value;
     }
 }
