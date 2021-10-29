@@ -11,8 +11,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CleanArchitecture.Api.Tests
 {
-    public class ApiWebApplicationFactory<TStartup> : WebApplicationFactory<TStartup> where TStartup: class
+    public class AppFixture : WebApplicationFactory<Program>
     {
+        public AppFixture()
+        {
+            ClientOptions.BaseAddress = new Uri("https://localhost/api");
+        }
+
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.ConfigureServices(services =>

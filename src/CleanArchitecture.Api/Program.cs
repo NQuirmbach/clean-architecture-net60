@@ -7,12 +7,12 @@ using CleanArchitecture.Infrastructure;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 
+var builder = WebApplication.CreateBuilder(args);
+
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .WriteTo.Console(theme: AnsiConsoleTheme.Code)
     .CreateLogger();
-
-var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog();
 
@@ -45,3 +45,8 @@ app.UseHealthChecks("/health");
 builder.MigrateDatabase();
 
 app.Run();
+
+public partial class Program
+{
+    // Expose class for WebApplicationFactory
+}
